@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+*.db
+.env
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific (বড় বা সংবেদনশীল ফাইল)
+backend/rag/knowledge_base/*.pdf   # যদি মূল PDF থাকে (বিকল্প)
+*.txt.backup
