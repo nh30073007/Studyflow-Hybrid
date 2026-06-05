@@ -22,22 +22,15 @@ All agents work together via a **Hybrid Manager** that orchestrates responses an
 
 ---
 
-## 🧠 Architecture
+## 🧠 Agent Workflow
 
-User (Student) → Streamlit UI → FastAPI Backend
-↓
-Hybrid Manager
-┌───────────┼───────────┐
-↓ ↓ ↓
-Teacher Tracker Parent
-Agent Agent Agent
-↓ ↓ ↓
-└───────────┼───────────┘
-↓
-RAG Searcher
-↓
-Knowledge Base (TXT files)
+- Student interacts through the Streamlit UI.
+- Requests are sent to the FastAPI backend.
+- The Hybrid Manager routes the request to the appropriate agent (Teacher, Tracker, or Parent).
+- Agents use the RAG Searcher to query the knowledge base (`.txt` files from textbooks).
+- Results are returned to the frontend.
 
+---
 
 - **Backend**: FastAPI (Python) – REST endpoints for chat, progress tracking, parent reports.
 - **Agents**: Custom logic + local LLM (Ollama) for reasoning.
