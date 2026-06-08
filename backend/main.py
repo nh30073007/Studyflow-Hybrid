@@ -9,15 +9,12 @@ import os
 import sys
 from sqlalchemy.orm import Session
 
-# এজেন্ট পাথ যোগ করো
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-# হাইব্রিড এজেন্ট ইমপোর্ট
+
 from agents.hybrid_manager import get_hybrid_manager
 from rag.searcher import search_knowledge_base
 from rag.init_rag import init_rag_system, get_knowledge_base_stats
-
-# ডাটাবেস ইমপোর্ট
 from database.db import get_db, init_db, SessionLocal
 from database.models import User, ChildProgress, ChatHistory, TopicMastery, Reminder
 from database.crud import (
@@ -141,19 +138,15 @@ def detect_topic(question: str) -> str:
 # ========================
 
 def get_agent_response(user_id: str, question: str, db: Session = None) -> str:
-    """
-    সিম্পল ফাংশন - সরাসরি RAG থেকে উত্তর আনে
-    কোন async জটিলতা নেই
-    """
+    
     try:
-        # প্রথমে নলেজ বেস থেকে খোঁজো
+       
         book_answer = search_knowledge_base(question)
         
-        # যদি বইতে পাওয়া যায়
         if book_answer:
             return f"🧸 টিচার এজেন্ট: {book_answer}\n\n❓ আরও কিছু জানতে চাও? 🤗"
         
-        # না পেলে হেল্পফুল মেসেজ
+        
         return f"""🤔 আমি '{question}' সম্পর্কে এখনো শিখিনি।
 
 📖 **আমি যা জানি:**
@@ -229,28 +222,21 @@ async def get_user_info(user_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="ইউজার খুঁজে পাওয়া যায়নি")
     return user.to_dict()
 
-# ========================
-# প্রধান API: প্রশ্ন উত্তর (সরলীকৃত)
-# ========================
+
 
 @app.post("/ask", response_model=QuestionResponse)
 async def ask_question(request: QuestionRequest, db: Session = Depends(get_db)):
-    """
-    বাচ্চার প্রশ্নের উত্তর দেয়
-    """
+   
     if not request.user_id or not request.question:
         raise HTTPException(status_code=400, detail="user_id এবং question প্রয়োজন")
     
-    # ইউজার নিশ্চিত করো
     user = get_or_create_user(db, request.user_id, request.user_id)
     
-    # টপিক ডিটেক্ট
+    
     topic = request.topic or detect_topic(request.question)
     
-    # উত্তর নাও (সিম্পল ফাংশন)
     answer = get_agent_response(request.user_id, request.question, db)
     
-    # ডাটাবেসে প্রোগ্রেস আপডেট
     update_child_progress(
         db=db,
         user_id=request.user_id,
@@ -258,7 +244,6 @@ async def ask_question(request: QuestionRequest, db: Session = Depends(get_db)):
         topic=topic
     )
     
-    # চ্যাট হিস্টোরি সেভ
     save_chat_history(
         db=db,
         user_id=request.user_id,
@@ -274,9 +259,6 @@ async def ask_question(request: QuestionRequest, db: Session = Depends(get_db)):
         topic=topic
     )
 
-# ========================
-# প্রোগ্রেস এন্ডপয়েন্টস
-# ========================
 
 @app.get("/progress/{user_id}")
 async def get_progress(user_id: str, db: Session = Depends(get_db)):
