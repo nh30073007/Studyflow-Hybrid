@@ -1,9 +1,4 @@
 # backend/database/crud.py
-"""
-CRUD অপারেশন - ডাটাবেসে ডাটা তৈরি, পড়া, আপডেট, ডিলিট
-সম্পূর্ণ ভার্সন - সব ফাংশন সহ
-"""
-
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func, and_, or_
 from datetime import datetime, timedelta
@@ -14,13 +9,8 @@ import logging
 from .models import User, ChildProgress, ChatHistory, TopicMastery, Reminder
 from .security import encrypt_data, decrypt_data, set_current_user
 
-# লগিং সেটআপ
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# ========================
-# ইউজার CRUD
-# ========================
 
 def create_user(
     db: Session,
@@ -33,10 +23,9 @@ def create_user(
     parent_phone: Optional[str] = None,
     parent_email: Optional[str] = None
 ) -> User:
-    """নতুন ইউজার তৈরি করে"""
     
     try:
-        # সেনসিটিভ ডাটা এনক্রিপ্ট
+        
         encrypted_phone = encrypt_data(parent_phone) if parent_phone else None
         encrypted_email = encrypt_data(email) if email else None
         encrypted_parent_email = encrypt_data(parent_email) if parent_email else None
@@ -61,7 +50,6 @@ def create_user(
         
         logger.info(f"✅ ইউজার তৈরি হয়েছে: {user_id} ({role})")
         
-        # চাইল্ড প্রোগ্রেস তৈরি (শুধুমাত্র child রোলের জন্য)
         if role == "child":
             progress = ChildProgress(
                 user_id=user_id,
@@ -86,7 +74,6 @@ def create_user(
         raise e
 
 def get_user(db: Session, user_id: str) -> Optional[User]:
-    """ইউজার খুঁজে আনে"""
     try:
         return db.query(User).filter(User.user_id == user_id).first()
     except Exception as e:
@@ -94,7 +81,7 @@ def get_user(db: Session, user_id: str) -> Optional[User]:
         return None
 
 def get_user_by_id(db: Session, id: int) -> Optional[User]:
-    """আইডি দিয়ে ইউজার খুঁজে আনে"""
+
     try:
         return db.query(User).filter(User.id == id).first()
     except Exception as e:
@@ -102,7 +89,7 @@ def get_user_by_id(db: Session, id: int) -> Optional[User]:
         return None
 
 def get_all_users(db: Session, role: Optional[str] = None, limit: int = 100, offset: int = 0) -> List[User]:
-    """সব ইউজার খুঁজে আনে (অপশনাল রোল ফিল্টার সহ)"""
+
     try:
         query = db.query(User)
         if role:
@@ -113,22 +100,21 @@ def get_all_users(db: Session, role: Optional[str] = None, limit: int = 100, off
         return []
 
 def get_all_children(db: Session, limit: int = 100, offset: int = 0) -> List[User]:
-    """সব শিশু ইউজার খুঁজে আনে"""
+
     return get_all_users(db, role="child", limit=limit, offset=offset)
 
 def get_all_parents(db: Session) -> List[User]:
-    """সব প্যারেন্ট ইউজার খুঁজে আনে"""
+   
     return get_all_users(db, role="parent")
 
 def update_user(db: Session, user_id: str, **kwargs) -> Optional[User]:
-    """ইউজার আপডেট করে"""
+    
     try:
         user = get_user(db, user_id)
         if not user:
             logger.warning(f"⚠️ ইউজার পাওয়া যায়নি: {user_id}")
             return None
         
-        # সেনসিটিভ ফিল্ড এনক্রিপ্ট
         sensitive_fields = ["parent_phone", "parent_email", "email"]
         for key, value in kwargs.items():
             if key in sensitive_fields and value:
@@ -149,7 +135,6 @@ def update_user(db: Session, user_id: str, **kwargs) -> Optional[User]:
         return None
 
 def delete_user(db: Session, user_id: str) -> bool:
-    """ইউজার ডিলিট করে (সফট ডিলিট)"""
     try:
         user = get_user(db, user_id)
         if not user:
@@ -168,7 +153,6 @@ def delete_user(db: Session, user_id: str) -> bool:
         return False
 
 def get_user_stats(db: Session) -> Dict:
-    """ইউজার সম্পর্কে সামারি স্ট্যাটাস"""
     try:
         total_users = db.query(User).count()
         active_users = db.query(User).filter(User.is_active == True).count()
@@ -191,7 +175,7 @@ def get_user_stats(db: Session) -> Dict:
 # ========================
 
 def get_child_progress_obj(db: Session, user_id: str) -> Optional[ChildProgress]:
-    """শিশুর প্রোগ্রেস অবজেক্ট খুঁজে আনে"""
+
     try:
         return db.query(ChildProgress).filter(ChildProgress.user_id == user_id).first()
     except Exception as e:
@@ -205,7 +189,7 @@ def update_child_progress(
     topic: Optional[str] = None,
     study_time_minutes: int = 0
 ) -> Optional[ChildProgress]:
-    """শিশুর প্রোগ্রেস আপডেট করে"""
+   
     
     try:
         progress = get_child_progress_obj(db, user_id)
@@ -225,16 +209,14 @@ def update_child_progress(
             )
             db.add(progress)
         
-        # প্রশ্ন কাউন্ট আপডেট
+      
         if question_correct is not None:
             progress.total_questions += 1
             if question_correct:
                 progress.correct_answers += 1
             
-            # একুরেসি ক্যালকুলেশন
             progress.accuracy = (progress.correct_answers / progress.total_questions) * 100 if progress.total_questions > 0 else 0
         
-        # স্ট্রিক আপডেট
         today = datetime.utcnow().date()
         if progress.last_active_date:
             last_date = progress.last_active_date.date()
@@ -248,13 +230,12 @@ def update_child_progress(
         progress.longest_streak = max(progress.longest_streak, progress.current_streak)
         progress.last_active_date = datetime.utcnow()
         
-        # স্টাডি টাইম আপডেট
+       
         if study_time_minutes > 0:
             progress.total_study_time += study_time_minutes
         
         progress.updated_at = datetime.utcnow()
         
-        # টপিক মাস্টারি আপডেট
         if topic and question_correct is not None:
             update_topic_mastery(db, user_id, topic, question_correct)
         
@@ -270,7 +251,6 @@ def update_child_progress(
         return None
 
 def get_child_progress(db: Session, user_id: str) -> Dict:
-    """শিশুর সম্পূর্ণ প্রোগ্রেস রিপোর্ট"""
     
     try:
         progress = get_child_progress_obj(db, user_id)
@@ -287,10 +267,9 @@ def get_child_progress(db: Session, user_id: str) -> Dict:
                 "topic_mastery": []
             }
         
-        # টপিক মাস্টারি
+    
         topics = db.query(TopicMastery).filter(TopicMastery.user_id == user_id).all()
         
-        # দুর্বল ও শক্তিশালী বিষয়
         weak_topics = [t.topic_name for t in topics if t.mastery_score < 50]
         strong_topics = [t.topic_name for t in topics if t.mastery_score >= 80]
         
@@ -313,7 +292,6 @@ def get_child_progress(db: Session, user_id: str) -> Dict:
         return {}
 
 def get_all_progress(db: Session, limit: int = 100) -> List[Dict]:
-    """সব শিশুর প্রোগ্রেস রিপোর্ট"""
     try:
         progresses = db.query(ChildProgress).limit(limit).all()
         return [p.to_dict() for p in progresses]
@@ -322,7 +300,7 @@ def get_all_progress(db: Session, limit: int = 100) -> List[Dict]:
         return []
 
 def get_top_performers(db: Session, limit: int = 10) -> List[Dict]:
-    """সেরা শিক্ষার্থীদের তালিকা"""
+
     try:
         progresses = db.query(ChildProgress).filter(
             ChildProgress.total_questions > 10
@@ -346,12 +324,10 @@ def get_top_performers(db: Session, limit: int = 10) -> List[Dict]:
         logger.error(f"❌ সেরা শিক্ষার্থী খুঁজতে ব্যর্থ: {e}")
         return []
 
-# ========================
-# টপিক মাস্টারি CRUD
-# ========================
+
 
 def get_topic_mastery(db: Session, user_id: str, topic_name: str) -> Optional[TopicMastery]:
-    """নির্দিষ্ট টপিকের মাস্টারি খুঁজে আনে"""
+    
     try:
         return db.query(TopicMastery).filter(
             TopicMastery.user_id == user_id,
@@ -367,7 +343,7 @@ def update_topic_mastery(
     topic_name: str,
     is_correct: bool
 ) -> Optional[TopicMastery]:
-    """টপিক ভিত্তিক দক্ষতা আপডেট করে"""
+    
     
     try:
         mastery = get_topic_mastery(db, user_id, topic_name)
@@ -388,7 +364,7 @@ def update_topic_mastery(
         if is_correct:
             mastery.questions_correct += 1
         
-        # মাস্টারি স্কোর ক্যালকুলেশন (0-100)
+       
         mastery.mastery_score = (mastery.questions_correct / mastery.questions_attempted) * 100
         mastery.last_practiced = datetime.utcnow()
         mastery.updated_at = datetime.utcnow()
@@ -405,7 +381,6 @@ def update_topic_mastery(
         return None
 
 def get_all_topics_mastery(db: Session, user_id: str) -> List[Dict]:
-    """ইউজারের সব টপিক মাস্টারি"""
     try:
         topics = db.query(TopicMastery).filter(TopicMastery.user_id == user_id).all()
         return [t.to_dict() for t in topics]
@@ -414,17 +389,16 @@ def get_all_topics_mastery(db: Session, user_id: str) -> List[Dict]:
         return []
 
 def get_topic_recommendations(db: Session, user_id: str, limit: int = 3) -> List[str]:
-    """পরবর্তী পড়ার জন্য টপিক সুপারিশ"""
+
     try:
         topics = get_all_topics_mastery(db, user_id)
         
-        # দুর্বল টপিক ফিল্টার
         weak_topics = [t for t in topics if t.get("mastery_score", 0) < 50]
         
         if weak_topics:
             return [t.get("topic_name") for t in weak_topics[:limit]]
         
-        # নতুন টপিক সুপারিশ
+       
         all_topics = ["বাংলা অক্ষর", "ইংরেজি অক্ষর", "গণিত", "রং চেনানো", "প্রাণী চেনানো", "জাতীয় সঙ্গীত"]
         learned_topics = [t.get("topic_name") for t in topics]
         new_topics = [t for t in all_topics if t not in learned_topics]
@@ -435,10 +409,6 @@ def get_topic_recommendations(db: Session, user_id: str, limit: int = 3) -> List
         logger.error(f"❌ টপিক সুপারিশ ব্যর্থ: {e}")
         return ["বাংলা অক্ষর", "গণিত"]
 
-# ========================
-# চ্যাট হিস্টোরি CRUD
-# ========================
-
 def save_chat_history(
     db: Session,
     user_id: str,
@@ -448,13 +418,13 @@ def save_chat_history(
     is_correct: Optional[bool] = None,
     response_time: float = 0.0
 ) -> Optional[ChatHistory]:
-    """চ্যাট হিস্টোরি সেভ করে"""
+    
     
     try:
         chat = ChatHistory(
             user_id=user_id,
-            question=question[:500],  # লিমিট
-            answer=answer[:1000],     # লিমিট
+            question=question[:500],  
+            answer=answer[:1000],     
             topic=topic,
             is_correct=is_correct,
             response_time=response_time,
@@ -480,7 +450,7 @@ def get_chat_history(
     offset: int = 0,
     topic: Optional[str] = None
 ) -> List[ChatHistory]:
-    """ইউজারের চ্যাট হিস্টোরি আনে"""
+   
     
     try:
         query = db.query(ChatHistory).filter(ChatHistory.user_id == user_id)
@@ -500,11 +470,11 @@ def get_chat_by_topic(
     topic: str,
     limit: int = 10
 ) -> List[ChatHistory]:
-    """টপিক অনুযায়ী চ্যাট খুঁজে আনে"""
+   
     return get_chat_history(db, user_id, limit=limit, topic=topic)
 
 def get_recent_chats(db: Session, user_id: str, hours: int = 24) -> List[ChatHistory]:
-    """নির্দিষ্ট সময়ের মধ্যে চ্যাট খুঁজে আনে"""
+   
     try:
         since_time = datetime.utcnow() - timedelta(hours=hours)
         return db.query(ChatHistory).filter(
@@ -516,7 +486,7 @@ def get_recent_chats(db: Session, user_id: str, hours: int = 24) -> List[ChatHis
         return []
 
 def get_chat_stats(db: Session, user_id: str) -> Dict:
-    """চ্যাট সম্পর্কে স্ট্যাটাস"""
+  
     try:
         total_chats = db.query(ChatHistory).filter(ChatHistory.user_id == user_id).count()
         correct_chats = db.query(ChatHistory).filter(
@@ -524,7 +494,7 @@ def get_chat_stats(db: Session, user_id: str) -> Dict:
             ChatHistory.is_correct == True
         ).count()
         
-        # টপিক ভিত্তিক কাউন্ট
+      
         topic_counts = db.query(
             ChatHistory.topic,
             func.count(ChatHistory.id).label('count')
@@ -540,9 +510,7 @@ def get_chat_stats(db: Session, user_id: str) -> Dict:
         logger.error(f"❌ চ্যাট স্ট্যাটাস ব্যর্থ: {e}")
         return {}
 
-# ========================
-# রিমাইন্ডার CRUD
-# ========================
+
 
 def create_reminder(
     db: Session,
@@ -554,7 +522,7 @@ def create_reminder(
     is_recurring: bool = False,
     recurring_pattern: Optional[str] = None
 ) -> Optional[Reminder]:
-    """নতুন রিমাইন্ডার তৈরি করে"""
+   
     
     try:
         reminder = Reminder(
@@ -582,7 +550,7 @@ def create_reminder(
         return None
 
 def get_reminders(db: Session, user_id: str, is_sent: Optional[bool] = None) -> List[Reminder]:
-    """ইউজারের রিমাইন্ডার খুঁজে আনে"""
+   
     try:
         query = db.query(Reminder).filter(Reminder.user_id == user_id)
         if is_sent is not None:
@@ -593,7 +561,7 @@ def get_reminders(db: Session, user_id: str, is_sent: Optional[bool] = None) -> 
         return []
 
 def get_pending_reminders(db: Session) -> List[Reminder]:
-    """পেন্ডিং রিমাইন্ডার খুঁজে আনে"""
+  
     try:
         now = datetime.utcnow()
         return db.query(Reminder).filter(
@@ -605,7 +573,7 @@ def get_pending_reminders(db: Session) -> List[Reminder]:
         return []
 
 def mark_reminder_sent(db: Session, reminder_id: int) -> bool:
-    """রিমাইন্ডার সেন্ট মার্ক করে"""
+   
     try:
         reminder = db.query(Reminder).filter(Reminder.id == reminder_id).first()
         if reminder:
@@ -621,7 +589,7 @@ def mark_reminder_sent(db: Session, reminder_id: int) -> bool:
         return False
 
 def delete_reminder(db: Session, reminder_id: int) -> bool:
-    """রিমাইন্ডার ডিলিট করে"""
+  
     try:
         reminder = db.query(Reminder).filter(Reminder.id == reminder_id).first()
         if reminder:
@@ -635,38 +603,31 @@ def delete_reminder(db: Session, reminder_id: int) -> bool:
         logger.error(f"❌ রিমাইন্ডার ডিলিট ব্যর্থ: {e}")
         return False
 
-# ========================
-# রিপোর্ট জেনারেশন
-# ========================
+
 
 def get_child_report(db: Session, user_id: str, days: int = 7) -> Dict:
-    """শিশুর বিস্তারিত রিপোর্ট তৈরি করে"""
     
     try:
-        # প্রোগ্রেস
+        
         progress = get_child_progress(db, user_id)
         
-        # গত N দিনের চ্যাট
         since_date = datetime.utcnow() - timedelta(days=days)
         recent_chats = db.query(ChatHistory).filter(
             ChatHistory.user_id == user_id,
             ChatHistory.timestamp >= since_date
         ).order_by(desc(ChatHistory.timestamp)).all()
         
-        # টপিক ভিত্তিক বিশ্লেষণ
         topics = db.query(TopicMastery).filter(TopicMastery.user_id == user_id).all()
         
-        # দৈনিক কার্যকলাপ
         daily_activity = {}
         for chat in recent_chats:
             day = chat.timestamp.date().isoformat()
             daily_activity[day] = daily_activity.get(day, 0) + 1
         
-        # দুর্বল ও শক্তিশালী বিষয়
+       
         weak_topics = [t.topic_name for t in topics if t.mastery_score < 50]
         strong_topics = [t.topic_name for t in topics if t.mastery_score >= 80]
         
-        # টপিক ডিটেইল
         topics_detail = []
         for t in topics:
             topics_detail.append({
@@ -696,7 +657,7 @@ def get_child_report(db: Session, user_id: str, days: int = 7) -> Dict:
         return {"error": str(e), "user_id": user_id}
 
 def generate_recommendations(weak_topics: List[str], progress: Dict) -> List[str]:
-    """সুপারিশ জেনারেট করে"""
+    
     
     recommendations = []
     
@@ -727,28 +688,22 @@ def generate_recommendations(weak_topics: List[str], progress: Dict) -> List[str
         recommendations.append("🎨 ছবি আঁকা এবং রং করার মাধ্যমে শেখাকে মজাদার করুন")
         recommendations.append("📖 পরবর্তী লেভেলের বিষয় শেখা শুরু করতে পারেন")
     
-    return recommendations[:5]  # সর্বোচ্চ ৫টি সুপারিশ
+    return recommendations[:5] 
 
-# ========================
-# ড্যাশবোর্ড স্ট্যাটাস
-# ========================
 
 def get_dashboard_stats(db: Session) -> Dict:
-    """ড্যাশবোর্ডের জন্য সব স্ট্যাটাস"""
+
     try:
-        # ইউজার স্ট্যাটাস
+        
         user_stats = get_user_stats(db)
         
-        # চ্যাট স্ট্যাটাস
         total_chats = db.query(ChatHistory).count()
         today_chats = db.query(ChatHistory).filter(
             ChatHistory.timestamp >= datetime.utcnow().replace(hour=0, minute=0, second=0)
         ).count()
         
-        # টপিক স্ট্যাটাস
         topics = db.query(TopicMastery.topic_name, func.avg(TopicMastery.mastery_score)).group_by(TopicMastery.topic_name).all()
         
-        # সাম্প্রতিক কার্যকলাপ
         recent_activities = db.query(ChatHistory).order_by(desc(ChatHistory.timestamp)).limit(10).all()
         
         return {
