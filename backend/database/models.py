@@ -26,9 +26,8 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = Column(Boolean, default=True)
     
-    # এনক্রিপ্টেড ফিল্ড
-    parent_phone = Column(String(50), nullable=True)  # এনক্রিপ্ট হবে
-    parent_email = Column(String(200), nullable=True)  # এনক্রিপ্ট হবে
+    parent_phone = Column(String(50), nullable=True)  
+    parent_email = Column(String(200), nullable=True)  
     
     def to_dict(self):
         return {
@@ -43,27 +42,24 @@ class User(Base):
         }
 
 class ChildProgress(Base):
-    """শিশুর প্রোগ্রেস ট্র্যাক করার মডেল"""
+
     __tablename__ = "child_progress"
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String(100), ForeignKey("users.user_id"), index=True, nullable=False)
     
-    # প্রোগ্রেস ডাটা
+   
     total_questions = Column(Integer, default=0)
     correct_answers = Column(Integer, default=0)
     accuracy = Column(Float, default=0.0)
     
-    # টপিক ভিত্তিক প্রোগ্রেস (JSON)
     topic_mastery = Column(JSON, default=dict)  # {"bangla_letters": 0.8, "math": 0.6}
     
-    # স্ট্রিক তথ্য
     current_streak = Column(Integer, default=0)
     longest_streak = Column(Integer, default=0)
     last_active_date = Column(DateTime, default=datetime.utcnow)
     
-    # সময়সীমা
-    total_study_time = Column(Integer, default=0)  # মিনিটে
+    total_study_time = Column(Integer, default=0)  
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -90,10 +86,9 @@ class ChatHistory(Base):
     question = Column(Text, nullable=False)
     answer = Column(Text, nullable=False)
     topic = Column(String(100), nullable=True)
-    is_correct = Column(Boolean, default=None)  # যদি মূল্যায়ন করা হয়
+    is_correct = Column(Boolean, default=None)  
     
-    # মেটাডাটা
-    response_time = Column(Float, default=0.0)  # সেকেন্ডে
+    response_time = Column(Float, default=0.0) 
     timestamp = Column(DateTime, default=datetime.utcnow, index=True)
     
     def to_dict(self):
@@ -115,12 +110,10 @@ class TopicMastery(Base):
     user_id = Column(String(100), ForeignKey("users.user_id"), index=True, nullable=False)
     topic_name = Column(String(100), nullable=False)  # bangla_letters, math, colors, animals
     
-    # দক্ষতা স্কোর
     mastery_score = Column(Float, default=0.0)  # 0-100
     questions_attempted = Column(Integer, default=0)
     questions_correct = Column(Integer, default=0)
     
-    # শেষ কার্যকলাপ
     last_practiced = Column(DateTime, default=datetime.utcnow)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
