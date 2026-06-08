@@ -1,25 +1,15 @@
 # backend/agents/parent.py
-"""
-প্যারেন্ট এজেন্ট - অভিভাবকদের জন্য রিপোর্ট এবং সুপারিশ তৈরি করে
-শিশুর অগ্রগতি সম্পর্কে বিস্তারিত জানায়
-"""
-
 from typing import Dict, List, Any
 from datetime import datetime, timedelta
 from .tracker import TrackerAgent
 
 class ParentAgent:
-    """
-    প্যারেন্ট এজেন্ট - অভিভাবকদের জন্য রিপোর্ট
-    শিশুর শেখার অগ্রগতি, দুর্বল বিষয়, সুপারিশ ইত্যাদি দেয়
-    """
     
     def __init__(self, name: str = "ParentAgent", tracker: TrackerAgent = None):
         self.name = name
         self.tracker = tracker or TrackerAgent()
     
     def get_system_message(self) -> str:
-        """এজেন্টের সিস্টেম মেসেজ"""
         return """তুমি একজন প্যারেন্ট রিপোর্টার Agent।
 
 তোমার কাজ:
@@ -31,15 +21,8 @@ class ParentAgent:
 তুমি পেশাদার এবং সহানুভূতিশীল ভাষায় রিপোর্ট দেবে।"""
     
     def get_child_report(self, user_id: str) -> Dict:
-        """
-        একটি শিশুর সম্পূর্ণ রিপোর্ট তৈরি করে
-        """
         progress = self.tracker.get_progress(user_id)
-        
-        # সাপ্তাহিক প্রবণতা
         weekly_trend = self._calculate_weekly_trend(user_id)
-        
-        # সুপারিশ
         recommendations = self._generate_recommendations(progress)
         
         return {
@@ -57,11 +40,9 @@ class ParentAgent:
         }
     
     def _calculate_weekly_trend(self, user_id: str) -> Dict:
-        """সাপ্তাহিক প্রবণতা গণনা করে"""
         progress = self.tracker.get_progress(user_id)
         daily_activity = progress.get("daily_activity", {})
         
-        # গত ৭ দিনের ডাটা
         weekly_data = []
         for i in range(7):
             date = (datetime.now() - timedelta(days=i)).date().isoformat()
@@ -75,10 +56,9 @@ class ParentAgent:
         }
     
     def _generate_recommendations(self, progress: Dict) -> List[str]:
-        """উন্নতির জন্য সুপারিশ তৈরি করে"""
         recommendations = []
-        
         weak_areas = progress.get("weak_areas", [])
+        
         if weak_areas:
             recommendations.append(f"🎯 দুর্বল বিষয়গুলোতে বেশি মনোযোগ দিন: {', '.join(weak_areas)}")
         
@@ -89,13 +69,12 @@ class ParentAgent:
             recommendations.append("📖 মৌলিক বিষয়গুলো (অক্ষর, সংখ্যা) আবার রিভিশন করান")
         
         if not recommendations:
-            recommendations.append("🌟 আপনার সন্তান非常好 করছে! নতুন চ্যালেঞ্জ দিন")
+            recommendations.append("🌟 আপনার সন্তান খুব ভালো করছে! নতুন চ্যালেঞ্জ দিন")
             recommendations.append("🎨 ছবি আঁকা এবং রং করার মাধ্যমে শেখাকে মজাদার করুন")
         
         return recommendations
     
     def _get_next_milestones(self, progress: Dict) -> List[str]:
-        """পরবর্তী মাইলস্টোন নির্ধারণ করে"""
         milestones = []
         
         if progress["total_questions"] < 50:
@@ -113,9 +92,6 @@ class ParentAgent:
         return milestones
     
     def get_parent_summary(self, user_id: str) -> str:
-        """
-        প্যারেন্টদের জন্য সহজ ভাষায় সারসংক্ষেপ
-        """
         report = self.get_child_report(user_id)
         summary = report["summary"]
         
@@ -149,14 +125,9 @@ class ParentAgent:
 
 🌟 মনে রাখবেন: প্রতিটি শিশুর শেখার গতি আলাদা। ধৈর্য ধরুন, উৎসাহ দিন!
         """
-        
         return text
     
     def send_weekly_report(self, user_id: str) -> bool:
-        """
-        সাপ্তাহিক রিপোর্ট পাঠায় (ইমেইল/নোটিফিকেশন)
-        এখন শুধু প্রিন্ট করবে, পরে ইমেইল যোগ করা যাবে
-        """
         report = self.get_parent_summary(user_id)
         print("\n" + "="*60)
         print("📧 সাপ্তাহিক রিপোর্ট পাঠানো হয়েছে")
