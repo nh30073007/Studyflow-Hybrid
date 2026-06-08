@@ -1,11 +1,9 @@
-# backend/agents/hybrid_manager.py
 from typing import Dict, Any, Optional
 from .teacher import TeacherAgent
 from .tracker import TrackerAgent
 from .parent import ParentAgent
 import sys
 import os
-
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from rag.searcher import search_knowledge_base
 
@@ -35,34 +33,25 @@ class HybridAgentManager:
         else:
             teacher_answer = await self.teacher.teach(question=question)
         
-    
         self.tracker.track_question(user_id, question, teacher_answer)
         
         return teacher_answer
     
     async def get_progress(self, user_id: str) -> Dict:
-        
         return self.tracker.get_progress(user_id)
     
     async def get_parent_report(self, user_id: str) -> str:
-        
         return self.parent.get_parent_summary(user_id)
     
     async def get_study_recommendation(self, user_id: str) -> str:
-        
         return self.tracker.get_study_recommendation(user_id)
     
     async def evaluate_answer(self, user_id: str, question: str, student_answer: str) -> Dict:
-        
         result = await self.teacher.evaluate_answer(question, student_answer)
-        
-    
         self.tracker.track_question(user_id, question, student_answer, result["is_correct"])
-        
         return result
     
     def get_system_status(self) -> Dict:
-        
         return {
             "status": "active",
             "agents": {
@@ -73,7 +62,6 @@ class HybridAgentManager:
             "ag2_enabled": self.ag2_enabled,
             "total_users": len(self.tracker.tracker_data)
         }
-
 
 _hybrid_manager = None
 
