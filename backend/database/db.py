@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# ডাটাবেস কনফিগারেশন
 USE_POSTGRES = os.getenv("USE_POSTGRES", "false").lower() == "true"
 
 if USE_POSTGRES:
@@ -20,10 +19,7 @@ else:
     engine = create_engine(SQLITE_URL, connect_args={"check_same_thread": False})
     print("✅ SQLite ডাটাবেস ব্যবহার করা হচ্ছে (ডেভেলপমেন্ট)")
 
-# সেশন ফ্যাক্টরি
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# বেস ক্লাস
 Base = declarative_base()
 
 def get_db() -> Generator[Session, None, None]:
