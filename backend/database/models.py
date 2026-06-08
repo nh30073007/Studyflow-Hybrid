@@ -1,8 +1,4 @@
 # backend/database/models.py
-"""
-SQLAlchemy ডাটাবেস মডেল
-ইউজার, প্রোগ্রেস, চ্যাট হিস্টোরি ইত্যাদি
-"""
 
 from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, Float, ForeignKey, JSON
 from sqlalchemy.ext.declarative import declarative_base
@@ -12,7 +8,6 @@ from datetime import datetime
 Base = declarative_base()
 
 class User(Base):
-    """ইউজার মডেল - শিশু বা প্যারেন্ট"""
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, index=True)
@@ -77,7 +72,7 @@ class ChildProgress(Base):
         }
 
 class ChatHistory(Base):
-    """চ্যাট হিস্টোরি সংরক্ষণের মডেল"""
+    
     __tablename__ = "chat_history"
     
     id = Column(Integer, primary_key=True, index=True)
@@ -103,7 +98,7 @@ class ChatHistory(Base):
         }
 
 class TopicMastery(Base):
-    """টপিক ভিত্তিক দক্ষতা ট্র্যাকিং"""
+   
     __tablename__ = "topic_mastery"
     
     id = Column(Integer, primary_key=True, index=True)
@@ -134,7 +129,7 @@ class TopicMastery(Base):
         }
 
 class Reminder(Base):
-    """রিমাইন্ডার মডেল"""
+    
     __tablename__ = "reminders"
     
     id = Column(Integer, primary_key=True, index=True)
