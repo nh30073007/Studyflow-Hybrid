@@ -6,7 +6,6 @@ import requests
 import json
 from datetime import datetime
 
-# পেজ কনফিগারেশন
 st.set_page_config(
     page_title="StudyFlow AI - প্লে গ্রুপ লার্নিং",
     page_icon="🧸",
@@ -14,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# কাস্টম CSS
+# CSS
 st.markdown("""
 <style>
     .main-header {
@@ -54,7 +53,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# সেশন স্টেট ইনিশিয়ালাইজ
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 if 'user_name' not in st.session_state:
@@ -69,7 +67,7 @@ if 'correct_answers' not in st.session_state:
 API_BASE_URL = "http://127.0.0.1:8000"  # localhost এর পরিবর্তে 127.0.0.1 ব্যবহার করো
 
 def ask_question(user_id, question):
-    """ব্যাকএন্ডে প্রশ্ন পাঠিয়ে উত্তর নেয়"""
+    
     try:
         response = requests.post(
             f"{API_BASE_URL}/ask",
@@ -86,7 +84,7 @@ def ask_question(user_id, question):
         return f"⚠️ সমস্যা: {str(e)}"
 
 def get_progress(user_id):
-    """ব্যাকএন্ড থেকে প্রোগ্রেস ডাটা আনে"""
+    
     try:
         response = requests.get(f"{API_BASE_URL}/progress/{user_id}")
         if response.status_code == 200:
@@ -95,12 +93,11 @@ def get_progress(user_id):
     except:
         return {}
 
-# সাইডবার - প্রোফাইল এবং প্রোগ্রেস
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3063/3063131.png", width=80)
     st.title("🎓 StudyFlow AI")
     
-    # ইউজার ইনপুট
+   
     user_name = st.text_input("👶 তোমার নাম লিখো:", value=st.session_state.user_name)
     if user_name and user_name != st.session_state.user_name:
         st.session_state.user_name = user_name
@@ -110,7 +107,7 @@ with st.sidebar:
     if st.session_state.user_name:
         st.success(f"স্বাগতম {st.session_state.user_name}! 🎉")
         
-        # প্রোগ্রেস দেখাও
+        
         progress = get_progress(st.session_state.user_name)
         if progress:
             st.subheader("📊 আজকের অগ্রগতি")
@@ -120,7 +117,6 @@ with st.sidebar:
             with col2:
                 st.metric("সঠিক উত্তর", progress.get('correct_answers', 0))
             
-            # প্রোগ্রেস বার
             if progress.get('total_questions', 0) > 0:
                 accuracy = (progress.get('correct_answers', 0) / progress.get('total_questions', 0)) * 100
                 st.progress(accuracy / 100)
@@ -135,10 +131,8 @@ with st.sidebar:
     st.markdown("---")
     st.caption("💡 টিপ: প্রশ্ন করো যেমন:\n- 'অ' অক্ষরটা শেখাও\n- ১ থেকে ১০ পর্যন্ত গণনা করো\n- জাতীয় সঙ্গীত শোনাও")
 
-# মেইন কন্টেন্ট
 st.markdown('<div class="main-header"><h1>🧸 StudyFlow AI</h1><p>তোমার ছোট্ট স্মার্ট টিচার - মজায় মজায় শিখি!</p></div>', unsafe_allow_html=True)
 
-# কুইক প্রশ্ন বাটন
 st.subheader("🎯 দ্রুত প্রশ্ন করুন:")
 quick_questions = [
     "অ অক্ষরটা শেখাও",
@@ -154,7 +148,6 @@ for idx, q in enumerate(quick_questions):
         if st.button(q, key=f"quick_{idx}"):
             st.session_state.question = q
 
-# প্রশ্ন ইনপুট
 st.markdown('<div class="question-box">', unsafe_allow_html=True)
 question = st.text_area(
     "🤔 কী জানতে চাও?",
@@ -165,29 +158,29 @@ question = st.text_area(
 )
 st.markdown('</div>', unsafe_allow_html=True)
 
-# জিজ্ঞেস করো বাটন
+
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     ask_button = st.button("✨ জিজ্ঞেস করো ✨", use_container_width=True)
 
 if ask_button and question and st.session_state.user_name:
-    # প্রশ্ন লগ করুন
+    
     st.session_state.total_questions += 1
     
     with st.spinner("📚 বই খুঁজে বের করছি..."):
         answer = ask_question(st.session_state.user_name, question)
         
-        # চ্যাট হিস্টোরিতে যোগ করুন
+        
         st.session_state.chat_history.append({
             "question": question,
             "answer": answer,
             "timestamp": datetime.now().strftime("%H:%M:%S")
         })
         
-        # উত্তর দেখান
+       
         st.markdown(f'<div class="answer-box"><h4>🤖 টিচার এজেন্ট:</h4><p>{answer}</p></div>', unsafe_allow_html=True)
         
-        # ফিডব্যাক ইমোজি
+        
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             if st.button("😊 ভালো লেগেছে"):
@@ -196,18 +189,18 @@ if ask_button and question and st.session_state.user_name:
             if st.button("😐 আরও ভালো হতে পারে"):
                 st.info("আমি আরও ভালো করার চেষ্টা করবো! 💪")
         
-        # ক্লিয়ার ইনপুট
+     
         st.session_state.question = ""
         st.rerun()
 
-# চ্যাট হিস্টোরি দেখান
+
 if st.session_state.chat_history:
     st.subheader("📜 তোমার শেখার ইতিহাস")
     for chat in reversed(st.session_state.chat_history[-5:]):  # শেষ ৫টি দেখাবে
         with st.expander(f"❓ {chat['question']} - {chat['timestamp']}"):
             st.write(f"**🤖 উত্তর:** {chat['answer']}")
 
-# প্যারেন্ট ড্যাশবোর্ডের লিংক
+
 st.markdown("---")
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
