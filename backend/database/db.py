@@ -23,10 +23,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def get_db() -> Generator[Session, None, None]:
-    """
-    FastAPI Dependency - ডাটাবেস সেশন পাওয়ার জন্য
-    ব্যবহার: db: Session = Depends(get_db)
-    """
+    
     session = SessionLocal()
     try:
         yield session
@@ -38,22 +35,22 @@ def get_db() -> Generator[Session, None, None]:
         session.close()
 
 def get_session() -> Session:
-    """সিঙ্গেল সেশন পাওয়ার জন্য (ব্যাকএন্ডে ব্যবহার)"""
+   
     return SessionLocal()
 
 def init_db():
-    """ডাটাবেস টেবিল তৈরি করে"""
+   
     from . import models
     Base.metadata.create_all(bind=engine)
     print("✅ ডাটাবেস টেবিল তৈরি হয়েছে!")
 
 def close_db():
-    """ডাটাবেস কানেকশন বন্ধ করে"""
+   
     engine.dispose()
     print("✅ ডাটাবেস কানেকশন বন্ধ হয়েছে")
 
 def test_connection():
-    """ডাটাবেস কানেকশন টেস্ট করে"""
+   
     try:
         session = SessionLocal()
         session.execute("SELECT 1")
