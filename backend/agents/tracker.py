@@ -1,8 +1,4 @@
 # backend/agents/tracker.py
-"""
-ট্র্যাকার এজেন্ট - বাচ্চাদের পড়ার অগ্রগতি ট্র্যাক করে
-কোন বিষয় শিখেছে, কোথায় দুর্বল, সব রেকর্ড করে
-"""
 
 from typing import Dict, List, Any
 from datetime import datetime, timedelta
@@ -10,19 +6,14 @@ import json
 import os
 
 class TrackerAgent:
-    """
-    প্রোগ্রেস ট্র্যাকার এজেন্ট
-    প্রতিটি শিশুর শেখার ইতিহাস সংরক্ষণ করে
-    """
     
     def __init__(self, name: str = "TrackerAgent"):
         self.name = name
-        self.tracker_data = {}  # user_id -> progress data
+        self.tracker_data = {}
         self.data_file = "tracker_data.json"
         self.load_data()
     
     def get_system_message(self) -> str:
-        """এজেন্টের সিস্টেম মেসেজ"""
         return """তুমি একজন প্রোগ্রেস ট্র্যাকার Agent।
 
 তোমার কাজ:
@@ -34,7 +25,6 @@ class TrackerAgent:
 তুমি সবসময় নির্ভুল এবং আপডেটেড তথ্য রাখবে।"""
     
     def load_data(self):
-        """সেভ করা ডাটা লোড করে"""
         if os.path.exists(self.data_file):
             try:
                 with open(self.data_file, 'r', encoding='utf-8') as f:
@@ -43,14 +33,11 @@ class TrackerAgent:
                 self.tracker_data = {}
     
     def save_data(self):
-        """ডাটা সেভ করে"""
         with open(self.data_file, 'w', encoding='utf-8') as f:
             json.dump(self.tracker_data, f, ensure_ascii=False, indent=2)
     
     def track_question(self, user_id: str, question: str, answer: str, is_correct: bool = None):
-        """
-        প্রশ্ন ট্র্যাক করে
-        """
+        
         if user_id not in self.tracker_data:
             self.tracker_data[user_id] = {
                 "user_id": user_id,
@@ -65,38 +52,32 @@ class TrackerAgent:
         now = datetime.now()
         today = now.date().isoformat()
         
-        # টপিক ডিটেক্ট
         topic = self._detect_topic(question)
         
-        # আপডেট
         data = self.tracker_data[user_id]
         data["total_questions"] += 1
         
         if is_correct:
             data["correct_answers"] += 1
         
-        # টপিক আপডেট
         if topic not in data["topics"]:
             data["topics"][topic] = {"total": 0, "correct": 0}
         data["topics"][topic]["total"] += 1
         if is_correct:
             data["topics"][topic]["correct"] += 1
         
-        # দৈনিক অ্যাক্টিভিটি
         if today not in data["daily_activity"]:
             data["daily_activity"][today] = 0
         data["daily_activity"][today] += 1
         
-        # ইতিহাস
         data["learning_history"].append({
             "timestamp": now.isoformat(),
             "question": question,
             "topic": topic,
             "is_correct": is_correct,
-            "answer": answer[:100]  # সংক্ষিপ্ত আকারে
+            "answer": answer[:100]
         })
         
-        # শেষ ৫০টি ইতিহাস রাখো
         if len(data["learning_history"]) > 50:
             data["learning_history"] = data["learning_history"][-50:]
         
@@ -106,7 +87,6 @@ class TrackerAgent:
         return True
     
     def _detect_topic(self, question: str) -> str:
-        """প্রশ্ন থেকে টপিক ডিটেক্ট করে"""
         question_lower = question.lower()
         
         topics = {
@@ -126,7 +106,6 @@ class TrackerAgent:
         return "অন্যান্য"
     
     def get_progress(self, user_id: str) -> Dict:
-        """ইউজারের প্রোগ্রেস রিপোর্ট দেয়"""
         if user_id not in self.tracker_data:
             return {
                 "user_id": user_id,
@@ -142,7 +121,6 @@ class TrackerAgent:
         correct = data["correct_answers"]
         accuracy = (correct / total * 100) if total > 0 else 0
         
-        # টপিক ভিত্তিক বিশ্লেষণ
         topic_analysis = {}
         for topic, stats in data["topics"].items():
             topic_total = stats["total"]
@@ -167,7 +145,6 @@ class TrackerAgent:
         }
     
     def _get_weak_areas(self, topic_analysis: Dict) -> List[str]:
-        """দুর্বল বিষয় বের করে"""
         weak = []
         for topic, stats in topic_analysis.items():
             if stats["accuracy"] < 60 and stats["total"] >= 3:
@@ -175,7 +152,6 @@ class TrackerAgent:
         return weak
     
     def _get_strong_areas(self, topic_analysis: Dict) -> List[str]:
-        """শক্তিশালী বিষয় বের করে"""
         strong = []
         for topic, stats in topic_analysis.items():
             if stats["accuracy"] >= 80 and stats["total"] >= 5:
@@ -183,9 +159,6 @@ class TrackerAgent:
         return strong
     
     def get_study_recommendation(self, user_id: str) -> str:
-        """
-        ইউজারের জন্য পড়ার সুপারিশ তৈরি করে
-        """
         progress = self.get_progress(user_id)
         
         if progress["total_questions"] == 0:
@@ -204,7 +177,6 @@ class TrackerAgent:
         return "📖 প্রতিদিন ১০ মিনিট করে অনুশীলন করো। তুমি ধীরে ধীরে সব শিখতে পারবে!"
     
     def get_daily_report(self, user_id: str) -> str:
-        """দৈনিক রিপোর্ট তৈরি করে"""
         progress = self.get_progress(user_id)
         today = datetime.now().date().isoformat()
         
