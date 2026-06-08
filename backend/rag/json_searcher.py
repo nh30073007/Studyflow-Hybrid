@@ -8,7 +8,7 @@ JSON_DB_PATH = os.path.join(os.path.dirname(__file__), "json_knowledge_base.json
 _json_cache = None
 
 def load_knowledge_base() -> List[Dict]:
-    """JSON নলেজ বেস লোড করে"""
+    
     global _json_cache
     if _json_cache is None:
         try:
@@ -25,10 +25,7 @@ def load_knowledge_base() -> List[Dict]:
     return _json_cache
 
 def search_json_knowledge_base(query: str) -> Optional[str]:
-    """
-    JSON ডাটাবেসে সার্চ করে সেরা উত্তর খুঁজে আনে
-    Priority এবং exact match ভিত্তিক
-    """
+    match ভিত্তিক
     query_lower = query.lower().strip()
     knowledge = load_knowledge_base()
     
@@ -43,29 +40,25 @@ def search_json_knowledge_base(query: str) -> Optional[str]:
         keywords = item.get('keywords', [])
         priority = item.get('priority', 10)
         
-        # Exact keyword match (সবচেয়ে গুরুত্বপূর্ণ)
+       
         for keyword in keywords:
             if keyword == query_lower:
                 score += 100
             elif keyword in query_lower:
                 score += 15
         
-        # Full question match
+        
         question_text = item.get('question', '').lower()
         if query_lower == question_text:
             score += 200
         elif question_text in query_lower or query_lower in question_text:
             score += 30
         
-        # Category bonus
         category = item.get('category', '').lower()
         if category in query_lower:
             score += 5
-        
-        # Priority bonus (lower priority number = higher priority)
         score += (100 - priority)
         
-        # Length bonus (shorter queries get better match)
         if len(query_lower) < 10:
             score += 5
         
@@ -74,7 +67,7 @@ def search_json_knowledge_base(query: str) -> Optional[str]:
             best_match = item
     
     if best_match and best_score > 0:
-        # খুব ছোট প্রশ্নের জন্য সহজ উত্তর
+    
         if 'easy_answer' in best_match and len(query) < 20:
             return best_match['easy_answer']
         return best_match['answer']
@@ -82,7 +75,7 @@ def search_json_knowledge_base(query: str) -> Optional[str]:
     return None
 
 def get_answer_with_context(query: str) -> str:
-    """কনটেক্সট সহ উত্তর"""
+    
     answer = search_json_knowledge_base(query)
     if answer:
         return f"📚 {answer}\n\n❓ আরও কিছু জানতে চাও? 🤗"
@@ -103,7 +96,7 @@ def get_answer_with_context(query: str) -> str:
 🎯 চেষ্টা করো! আমি সাহায্য করতে প্রস্তুত!"""
 
 def get_knowledge_stats() -> Dict:
-    """নলেজ বেস স্ট্যাটাস"""
+   
     knowledge = load_knowledge_base()
     categories = {}
     for item in knowledge:
