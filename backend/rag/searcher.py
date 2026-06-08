@@ -6,7 +6,7 @@ from typing import List, Dict, Optional
 import glob
 
 class KnowledgeSearcher:
-    """RAG নলেজ বেস সার্চার - JSON + TXT ফাইল থেকে সার্চ করে"""
+ 
     
     def __init__(self, json_db_path: str = None, knowledge_base_dir: str = None):
         if json_db_path is None:
@@ -20,7 +20,7 @@ class KnowledgeSearcher:
         self.json_knowledge_base = self._load_json_knowledge_base()
         self.txt_contents = self._load_txt_files()
         
-        # প্রি-ডিফাইন্ড উত্তর (Exact Match এর জন্য)
+        
         self.exact_matches = {
             # বাংলা অক্ষর - Exact match
             "অ": "অ হলো বাংলা বর্ণমালার প্রথম অক্ষর। এটি স্বরবর্ণ। অ দিয়ে অজগর 🐍",
@@ -52,7 +52,7 @@ class KnowledgeSearcher:
         print(f"📚 RAG সার্চার ইনিশিয়ালাইজ: {len(self.txt_contents)} টি TXT ফাইল, {len(self.exact_matches)} টি Exact Match")
     
     def _load_json_knowledge_base(self) -> Dict:
-        """JSON নলেজ বেস লোড করে"""
+        
         if os.path.exists(self.json_db_path):
             try:
                 with open(self.json_db_path, 'r', encoding='utf-8') as f:
@@ -66,7 +66,7 @@ class KnowledgeSearcher:
         return {"questions": []}
     
     def _load_txt_files(self) -> List[Dict]:
-        """knowledge_base ফোল্ডার থেকে সব TXT ফাইল লোড করে"""
+        
         contents = []
         
         if not os.path.exists(self.knowledge_base_dir):
@@ -94,15 +94,15 @@ class KnowledgeSearcher:
         return contents
     
     def _exact_match_search(self, query: str) -> Optional[str]:
-        """Exact match প্রি-ডিফাইন্ড উত্তর খোঁজে"""
+        
         query_lower = query.lower().strip()
         
-        # Exact match চেক (প্রথম অগ্রাধিকার)
+       
         for key, answer in self.exact_matches.items():
             if key == query_lower or key in query_lower:
                 return answer
         
-        # এক অক্ষরের প্রশ্ন (যেমন "অ", "আ", "ক")
+       
         if len(query_lower) == 1:
             for key, answer in self.exact_matches.items():
                 if key == query_lower:
@@ -123,25 +123,25 @@ class KnowledgeSearcher:
             keywords = item.get('keywords', [])
             priority = item.get('priority', 10)
             
-            # Exact keyword match (সবচেয়ে গুরুত্বপূর্ণ)
+          
             for keyword in keywords:
                 if keyword == query_lower:
                     score += 100
                 elif keyword in query_lower:
                     score += 20
             
-            # Question match
+            
             question_text = item.get('question', '').lower()
             if query_lower == question_text:
                 score += 150
             elif question_text in query_lower or query_lower in question_text:
                 score += 30
             
-            # "শেখাও" শব্দ থাকলে বিস্তারিত উত্তর চাই
+           
             if "শেখাও" in query_lower:
                 score += 50
             
-            # Priority bonus (lower number = higher priority)
+           
             score += (100 - priority)
             
             if score > best_score:
@@ -154,7 +154,7 @@ class KnowledgeSearcher:
         return None
     
     def search(self, query: str, top_k: int = 3) -> Dict:
-        """কোয়েরি অনুযায়ী সার্চ করে"""
+       
         results = []
         query_lower = query.lower()
         
@@ -170,10 +170,10 @@ class KnowledgeSearcher:
                 }]
             }
         
-        # 2. JSON ডাটাবেস থেকে সার্চ
+      
         json_match = self._json_search(query)
         if json_match:
-            # "শেখাও" থাকলে বিস্তারিত উত্তর দাও
+           
             if "শেখাও" in query_lower:
                 answer = json_match.get('answer', '')
             else:
@@ -186,7 +186,7 @@ class KnowledgeSearcher:
                 'type': 'json'
             })
         
-        # 3. TXT ফাইল থেকে সার্চ
+     
         for doc in self.txt_contents:
             content = doc.get('content', '')
             source = doc.get('source', '')
@@ -208,7 +208,7 @@ class KnowledgeSearcher:
         return {'results': results[:top_k]}
     
     def _calculate_score(self, query: str, content: str) -> float:
-        """কোয়েরি এবং কন্টেন্টের মিল স্কোর"""
+        
         content_lower = content.lower()
         score = 0.0
         
@@ -227,7 +227,7 @@ class KnowledgeSearcher:
         return min(score, 1.0)
     
     def search_txt_only(self, query: str) -> Optional[str]:
-        """শুধু TXT ফাইলে সার্চ করে"""
+        
         query_lower = query.lower()
         
         for doc in self.txt_contents:
@@ -249,7 +249,7 @@ class KnowledgeSearcher:
         return None
     
     def get_answer(self, query: str) -> Optional[str]:
-        """সরাসরি উত্তর খুঁজে আনে"""
+       
         result = self.search(query, top_k=1)
         
         if result and result.get('results'):
@@ -262,9 +262,7 @@ class KnowledgeSearcher:
         return None
 
 
-# ============================================
-# Backward Compatibility Functions
-# ============================================
+
 
 _searcher = None
 
@@ -275,14 +273,11 @@ def get_searcher():
     return _searcher
 
 def search_knowledge_base(query: str) -> Optional[str]:
-    """
-    সহজ ফাংশন - স্ট্রিং রিটার্ন করে
-    Exact match > JSON > TXT প্রায়োরিটি অনুযায়ী
-    """
+   
     try:
         searcher = get_searcher()
         
-        # "শেখাও" থাকলে JSON বিস্তারিত উত্তর দাও
+        
         if "শেখাও" in query.lower():
             json_match = searcher._json_search(query)
             if json_match:
@@ -290,24 +285,24 @@ def search_knowledge_base(query: str) -> Optional[str]:
                 if detailed_answer:
                     return detailed_answer
         
-        # Exact match চেক
+      
         exact_answer = searcher._exact_match_search(query)
         if exact_answer:
             return exact_answer
         
-        # JSON ডাটাবেস চেক
+        
         json_match = searcher._json_search(query)
         if json_match:
             answer = json_match.get('easy_answer') or json_match.get('answer', '')
             if answer:
                 return answer
         
-        # TXT ফাইল থেকে সার্চ
+        
         txt_result = searcher.search_txt_only(query)
         if txt_result:
             return txt_result
         
-        # সাধারণ সার্চ
+        
         result = searcher.search(query, top_k=1)
         if result and result.get('results'):
             best = result['results'][0]
@@ -323,11 +318,11 @@ def search_knowledge_base(query: str) -> Optional[str]:
     return None
 
 def search_json_knowledge_base(query: str) -> Optional[str]:
-    """JSON ডাটাবেস থেকে সার্চ করে"""
+    
     return search_knowledge_base(query)
 
 def get_answer_with_context(query: str) -> str:
-    """কনটেক্সট সহ উত্তর"""
+    
     answer = search_knowledge_base(query)
     
     if answer:
