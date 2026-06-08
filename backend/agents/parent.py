@@ -10,15 +10,7 @@ class ParentAgent:
         self.tracker = tracker or TrackerAgent()
     
     def get_system_message(self) -> str:
-        return """তুমি একজন প্যারেন্ট রিপোর্টার Agent।
-
-তোমার কাজ:
-1. অভিভাবকদের শিশুর অগ্রগতি সম্পর্কে বিস্তারিত রিপোর্ট দেওয়া
-2. শিশুর দুর্বল ও শক্তিশালী বিষয় চিহ্নিত করা
-3. উন্নতির জন্য সুপারিশ দেওয়া
-4. সাপ্তাহিক এবং মাসিক রিপোর্ট তৈরি করা
-
-তুমি পেশাদার এবং সহানুভূতিশীল ভাষায় রিপোর্ট দেবে।"""
+        return 
     
     def get_child_report(self, user_id: str) -> Dict:
         progress = self.tracker.get_progress(user_id)
